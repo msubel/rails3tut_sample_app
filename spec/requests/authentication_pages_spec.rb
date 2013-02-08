@@ -5,6 +5,17 @@ describe "Authentication" do
  
 	describe "authorization" do
 	  
+	  describe "as admin user" do
+	    let(:admin) { FactoryGirl.create(:admin) }
+	    before { sign_in admin }
+	    
+	    describe "should not be able to destroy himself" do
+	      before { delete user_path(admin) }
+	      specify { response.should redirect_to(root_path) }
+	    end
+	    
+	  end
+	  
 	  describe "as non-admin user" do
 	    let(:user) { FactoryGirl.create(:user) }
 	    let(:non_admin) { FactoryGirl.create(:user) }
@@ -36,6 +47,11 @@ describe "Authentication" do
 	  
 	  describe "for non-signed-in users" do
 	    let(:user) { FactoryGirl.create(:user) }
+	    
+	    describe "links when not signed in" do
+        it { should_not have_link('Profile', href: user_path(user)) }
+			  it { should_not have_link('Settings', href: edit_user_path(user)) }	    
+			end
 	    
 	    describe "when attempting to visit a protected page" do
 	      before do
@@ -98,6 +114,16 @@ describe "Authentication" do
 			it { should have_link('Settings', href: edit_user_path(user)) }
 			it { should have_link('Sign out', href: signout_path) }
 			it { should_not have_link('Sign in', href: signin_path) }
+			
+			describe "followed by Users#new action" do
+			  before { get signup_path }
+			  specify { response.should redirect_to(root_path) }
+			end
+			
+			describe "followed by Users#create action" do
+			  before { post users_path }
+			  specify { response.should redirect_to(root_path) }
+			end
 			
 			describe "followed by signout" do
 				before { click_link "Sign out" }
